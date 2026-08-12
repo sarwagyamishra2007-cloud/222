@@ -3,7 +3,9 @@ import os
 import sys
 import time
 
-sys.path.insert(0, os.path.dirname(__file__))
+# Ensure backend/ is on sys.path regardless of working directory
+_BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _BACKEND_DIR)
 
 from dotenv import load_dotenv
 
@@ -40,7 +42,8 @@ app.add_middleware(
 )
 
 # ── Static frontend ───────────────────────────────────────────────────────────
-_frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
+_frontend_dir = os.path.join(_BACKEND_DIR, "..", "frontend")
+_frontend_dir = os.path.abspath(_frontend_dir)
 
 if os.path.isdir(_frontend_dir):
     app.mount("/static", StaticFiles(directory=_frontend_dir), name="static")

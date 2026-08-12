@@ -2,7 +2,7 @@ import json
 import os
 from typing import Any
 
-_EXERCISES_DIR = os.path.join(os.path.dirname(__file__), "exercises")
+_EXERCISES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "exercises")
 
 
 def load_exercise(exercise_id: str) -> dict[str, Any]:

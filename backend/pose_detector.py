@@ -26,7 +26,7 @@ _POSE_CONNECTIONS = [
 _LANDMARK_NAMES = [lm.name for lm in mp_vision.PoseLandmark]
 
 # Path to the .task model file — download automatically if missing
-_MODEL_PATH = os.path.join(os.path.dirname(__file__), "pose_landmarker.task")
+_MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pose_landmarker.task")
 _MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/pose_landmarker/"
     "pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
