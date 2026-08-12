@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Posture Coach</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <!-- Chart.js for progress dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ── App Header ──────────────────────────────────────────────────────────── -->
+<header class="app-header hidden" id="app-header">
+  <span class="logo">🧘 AI Posture Coach</span>
+  <nav>
+    <button id="btn-nav-exercises" class="active">Exercises</button>
+    <button id="btn-nav-progress">Progress</button>
+    <button id="btn-logout">Logout</button>
+  </nav>
+</header>
+
+<!-- ── Auth View ───────────────────────────────────────────────────────────── -->
+<div id="auth-view">
+  <div class="auth-card">
+    <h2>AI Posture Coach</h2>
+    <div class="auth-tabs">
+      <button id="tab-login" class="active" onclick="Auth.showTab('login')">Login</button>
+      <button id="tab-register" onclick="Auth.showTab('register')">Register</button>
+    </div>
+
+    <div id="form-login">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="login-username" placeholder="Enter username" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" />
+      </div>
+      <button class="btn-primary" onclick="Auth.login()">Login</button>
+    </div>
+
+    <div id="form-register" class="hidden">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="reg-username" placeholder="Choose a username" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="At least 4 characters" autocomplete="new-password" />
+      </div>
+      <button class="btn-primary" onclick="Auth.register()">Create Account</button>
+    </div>
+
+    <div class="auth-error" id="auth-error"></div>
+
+    <div class="disclaimer" style="margin-top:18px">
+      <strong>Note:</strong> This system provides fitness guidance only and is
+      not a substitute for a qualified physiotherapist or doctor.
+    </div>
+  </div>
+</div>
+
+<!-- ── Exercise View ───────────────────────────────────────────────────────── -->
+<div id="exercise-view" class="view hidden">
+  <h2>Choose an Exercise</h2>
+  <div class="category-tabs">
+    <button class="active" onclick="ExerciseSelector.filter('all', this)">All</button>
+    <button onclick="ExerciseSelector.filter('yoga', this)">Yoga</button>
+    <button onclick="ExerciseSelector.filter('gym', this)">Gym</button>
+    <button onclick="ExerciseSelector.filter('physiotherapy', this)">Physiotherapy</button>
+  </div>
+  <div class="exercise-grid" id="exercise-grid"></div>
+
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> This system provides posture and movement guidance for fitness purposes only.
+    It does not diagnose medical conditions and is not a substitute for a qualified physiotherapist or doctor.
+    Consult a healthcare professional before starting any new exercise program.
+  </div>
+</div>
+
+<!-- ── Camera View ─────────────────────────────────────────────────────────── -->
+<div id="camera-view" class="view hidden">
+  <h2 id="camera-title">Exercise</h2>
+
+  <div class="camera-controls">
+    <button class="btn-secondary" onclick="CameraSession.back()">← Back</button>
+    <button class="btn-danger" id="btn-stop" onclick="CameraSession.stop()">Stop Session</button>
+  </div>
+
+  <div class="camera-layout">
+    <!-- Left: live video canvas -->
+    <div class="video-wrapper">
+      <canvas id="display-canvas" width="640" height="480"></canvas>
+      <div id="session-summary" class="hidden">
+        <h3>Session Complete</h3>
+        <div class="summary-stat" id="summary-accuracy">—</div>
+        <div class="summary-label">Average Accuracy</div>
+        <div class="summary-stat" id="summary-reps">—</div>
+        <div class="summary-label">Frames Analyzed</div>
+        <button class="btn-primary" style="margin-top:12px;width:200px" onclick="CameraSession.back()">
+          Back to Exercises
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: feedback panel -->
+    <div class="feedback-panel">
+      <div class="panel-card">
+        <h4>Accuracy</h4>
+        <div class="accuracy-display">
+          <div class="accuracy-value" id="accuracy-value">—</div>
+          <div class="accuracy-bar-wrap">
+            <div class="accuracy-bar-fill" id="accuracy-bar" style="width:0%;background:var(--muted)"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h4>Feedback</h4>
+        <ul class="feedback-messages" id="feedback-list">
+          <li class="ok">Waiting for pose detection…</li>
+        </ul>
+      </div>
+
+      <div class="panel-card">
+        <h4>Exercise Tips</h4>
+        <ul class="feedback-messages" id="cues-list"></ul>
+      </div>
+
+      <div class="disclaimer">
+        <strong>Reminder:</strong> Stop immediately if you feel pain or discomfort.
+        This is guidance only, not medical advice.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Progress View ───────────────────────────────────────────────────────── -->
+<div id="progress-view" class="view hidden">
+  <h2>My Progress</h2>
+  <div class="progress-chart-wrap">
+    <canvas id="progress-chart"></canvas>
+  </div>
+  <div class="panel-card">
+    <h4 style="margin-bottom:12px">Session History</h4>
+    <table class="sessions-table" id="sessions-table">
+      <thead>
+        <tr>
+          <th>Exercise</th><th>Category</th><th>Date</th>
+          <th>Avg Accuracy</th><th>Frames</th>
+        </tr>
+      </thead>
+      <tbody id="sessions-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

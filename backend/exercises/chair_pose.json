@@ -1,0 +1,40 @@
+{
+  "id": "chair_pose",
+  "name": "Chair Pose",
+  "category": "yoga",
+  "cues": [
+    "Knees bent as if sitting in a chair",
+    "Knees behind toes",
+    "Arms raised overhead, biceps near ears",
+    "Weight in heels"
+  ],
+  "rules": [
+    {
+      "id": "knee_bend",
+      "landmarks": ["LEFT_HIP", "LEFT_KNEE", "LEFT_ANKLE"],
+      "min_angle": 70,
+      "max_angle": 110,
+      "severity": "major",
+      "feedback_fail": "Bend your knees more — aim for a 90° angle",
+      "feedback_ok": "Knee bend depth is good"
+    },
+    {
+      "id": "arms_overhead",
+      "landmarks": ["LEFT_HIP", "LEFT_SHOULDER", "LEFT_ELBOW"],
+      "min_angle": 150,
+      "max_angle": 180,
+      "severity": "major",
+      "feedback_fail": "Raise your arms higher — biceps near your ears",
+      "feedback_ok": "Arms are raised overhead"
+    },
+    {
+      "id": "torso_forward_lean",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_HIP", "LEFT_KNEE"],
+      "min_angle": 45,
+      "max_angle": 75,
+      "severity": "minor",
+      "feedback_fail": "Lean your torso forward slightly to maintain balance",
+      "feedback_ok": "Torso lean is good"
+    }
+  ]
+}

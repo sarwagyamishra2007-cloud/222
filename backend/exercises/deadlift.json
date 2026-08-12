@@ -1,0 +1,41 @@
+{
+  "id": "deadlift",
+  "name": "Deadlift",
+  "category": "gym",
+  "cues": [
+    "Hinge at the hips — push them back",
+    "Spine neutral throughout the lift",
+    "Bar close to the body",
+    "Drive hips forward to stand",
+    "Shoulders slightly ahead of the bar at setup"
+  ],
+  "rules": [
+    {
+      "id": "hip_hinge_angle",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_HIP", "LEFT_KNEE"],
+      "min_angle": 45,
+      "max_angle": 90,
+      "severity": "major",
+      "feedback_fail": "Hinge more at the hips — push them back further",
+      "feedback_ok": "Hip hinge is correct"
+    },
+    {
+      "id": "spine_neutral",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_HIP", "LEFT_ANKLE"],
+      "min_angle": 150,
+      "max_angle": 180,
+      "severity": "major",
+      "feedback_fail": "Keep your spine neutral — do not round your lower back",
+      "feedback_ok": "Spine is neutral"
+    },
+    {
+      "id": "knee_bend",
+      "landmarks": ["LEFT_HIP", "LEFT_KNEE", "LEFT_ANKLE"],
+      "min_angle": 120,
+      "max_angle": 160,
+      "severity": "minor",
+      "feedback_fail": "Bend your knees slightly at the start of the lift",
+      "feedback_ok": "Knee position is good"
+    }
+  ]
+}

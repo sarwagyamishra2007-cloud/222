@@ -1,0 +1,40 @@
+{
+  "id": "cobra_pose",
+  "name": "Cobra Pose",
+  "category": "yoga",
+  "cues": [
+    "Lie on your stomach, hands under shoulders",
+    "Elbows close to the body",
+    "Lift chest up using back muscles",
+    "Keep lower body relaxed on the mat"
+  ],
+  "rules": [
+    {
+      "id": "elbow_angle",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_ELBOW", "LEFT_WRIST"],
+      "min_angle": 90,
+      "max_angle": 150,
+      "severity": "major",
+      "feedback_fail": "Keep elbows close to your sides — do not flare them out",
+      "feedback_ok": "Elbow position is correct"
+    },
+    {
+      "id": "shoulder_lift",
+      "landmarks": ["LEFT_HIP", "LEFT_SHOULDER", "LEFT_ELBOW"],
+      "min_angle": 100,
+      "max_angle": 150,
+      "severity": "major",
+      "feedback_fail": "Lift your chest higher by engaging your back muscles",
+      "feedback_ok": "Chest lift looks good"
+    },
+    {
+      "id": "neck_neutral",
+      "landmarks": ["LEFT_SHOULDER", "NOSE", "LEFT_EAR"],
+      "min_angle": 140,
+      "max_angle": 180,
+      "severity": "minor",
+      "feedback_fail": "Relax your neck — gaze slightly forward, not up",
+      "feedback_ok": "Neck is in a neutral position"
+    }
+  ]
+}

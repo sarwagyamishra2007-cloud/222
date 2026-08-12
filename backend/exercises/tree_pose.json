@@ -1,0 +1,40 @@
+{
+  "id": "tree_pose",
+  "name": "Tree Pose",
+  "category": "yoga",
+  "cues": [
+    "Standing leg straight, knee not locked",
+    "Raised foot pressed against inner thigh or calf (avoid the knee)",
+    "Hips level and square",
+    "Hands in prayer at chest or raised overhead"
+  ],
+  "rules": [
+    {
+      "id": "standing_leg_straight",
+      "landmarks": ["LEFT_HIP", "LEFT_KNEE", "LEFT_ANKLE"],
+      "min_angle": 165,
+      "max_angle": 180,
+      "severity": "major",
+      "feedback_fail": "Keep your standing leg straight",
+      "feedback_ok": "Standing leg is straight"
+    },
+    {
+      "id": "hip_level",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_HIP", "RIGHT_HIP"],
+      "min_angle": 170,
+      "max_angle": 180,
+      "severity": "minor",
+      "feedback_fail": "Level your hips — avoid tilting to one side",
+      "feedback_ok": "Hips are level"
+    },
+    {
+      "id": "torso_upright",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_HIP", "LEFT_KNEE"],
+      "min_angle": 160,
+      "max_angle": 180,
+      "severity": "minor",
+      "feedback_fail": "Stand tall — keep your torso upright",
+      "feedback_ok": "Torso is upright"
+    }
+  ]
+}

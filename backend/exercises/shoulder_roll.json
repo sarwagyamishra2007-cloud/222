@@ -1,0 +1,40 @@
+{
+  "id": "shoulder_roll",
+  "name": "Shoulder Roll",
+  "category": "physiotherapy",
+  "cues": [
+    "Sit or stand tall with arms relaxed",
+    "Roll shoulders forward, up, back, and down in a smooth circle",
+    "Keep neck relaxed — do not tense up",
+    "Move slowly and with control"
+  ],
+  "rules": [
+    {
+      "id": "spine_upright",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_HIP", "LEFT_KNEE"],
+      "min_angle": 160,
+      "max_angle": 180,
+      "severity": "major",
+      "feedback_fail": "Sit up straight — do not slouch during shoulder rolls",
+      "feedback_ok": "Spine is upright"
+    },
+    {
+      "id": "neck_relaxed",
+      "landmarks": ["LEFT_SHOULDER", "NOSE", "LEFT_EAR"],
+      "min_angle": 140,
+      "max_angle": 180,
+      "severity": "minor",
+      "feedback_fail": "Relax your neck — keep it in a neutral position",
+      "feedback_ok": "Neck is relaxed"
+    },
+    {
+      "id": "shoulder_elevation",
+      "landmarks": ["LEFT_ELBOW", "LEFT_SHOULDER", "LEFT_HIP"],
+      "min_angle": 30,
+      "max_angle": 90,
+      "severity": "minor",
+      "feedback_fail": "Lift your shoulders higher during the upward phase of the roll",
+      "feedback_ok": "Shoulder elevation is good"
+    }
+  ]
+}

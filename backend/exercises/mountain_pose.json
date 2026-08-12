@@ -1,0 +1,40 @@
+{
+  "id": "mountain_pose",
+  "name": "Mountain Pose",
+  "category": "yoga",
+  "cues": [
+    "Stand with feet hip-width apart",
+    "Legs straight, knees soft — not locked",
+    "Arms at sides, palms forward",
+    "Crown of head reaching upward"
+  ],
+  "rules": [
+    {
+      "id": "knee_not_hyperextended",
+      "landmarks": ["LEFT_HIP", "LEFT_KNEE", "LEFT_ANKLE"],
+      "min_angle": 160,
+      "max_angle": 180,
+      "severity": "minor",
+      "feedback_fail": "Soften your knees slightly — avoid locking them",
+      "feedback_ok": "Knees are in good position"
+    },
+    {
+      "id": "spine_straight",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_HIP", "LEFT_KNEE"],
+      "min_angle": 165,
+      "max_angle": 180,
+      "severity": "major",
+      "feedback_fail": "Stand tall and straighten your spine",
+      "feedback_ok": "Spine is straight"
+    },
+    {
+      "id": "shoulder_level",
+      "landmarks": ["LEFT_SHOULDER", "RIGHT_SHOULDER", "RIGHT_ELBOW"],
+      "min_angle": 160,
+      "max_angle": 180,
+      "severity": "minor",
+      "feedback_fail": "Relax your shoulders — keep them level",
+      "feedback_ok": "Shoulders are level and relaxed"
+    }
+  ]
+}

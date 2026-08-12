@@ -1,0 +1,41 @@
+{
+  "id": "squat",
+  "name": "Squat",
+  "category": "gym",
+  "cues": [
+    "Feet shoulder-width apart, toes slightly out",
+    "Knees track over toes",
+    "Chest up, spine neutral",
+    "Hip crease below knee at bottom position",
+    "Drive through heels to stand"
+  ],
+  "rules": [
+    {
+      "id": "knee_depth",
+      "landmarks": ["LEFT_HIP", "LEFT_KNEE", "LEFT_ANKLE"],
+      "min_angle": 70,
+      "max_angle": 100,
+      "severity": "major",
+      "feedback_fail": "Squat deeper — aim for thighs parallel to the floor",
+      "feedback_ok": "Squat depth is good"
+    },
+    {
+      "id": "back_neutral",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_HIP", "LEFT_KNEE"],
+      "min_angle": 45,
+      "max_angle": 80,
+      "severity": "major",
+      "feedback_fail": "Keep chest up and back straight — do not round your spine",
+      "feedback_ok": "Back is in a neutral position"
+    },
+    {
+      "id": "knee_over_toes",
+      "landmarks": ["LEFT_HIP", "LEFT_KNEE", "LEFT_ANKLE"],
+      "min_angle": 75,
+      "max_angle": 105,
+      "severity": "minor",
+      "feedback_fail": "Track your knees over your toes — do not let them cave inward",
+      "feedback_ok": "Knee alignment is good"
+    }
+  ]
+}

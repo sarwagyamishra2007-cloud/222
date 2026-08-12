@@ -1,0 +1,10 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+mediapipe==1.0.0
+opencv-python-headless==4.10.0.84
+numpy==2.1.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+sqlalchemy==2.0.36
+python-dotenv==1.0.1
+python-multipart==0.0.12

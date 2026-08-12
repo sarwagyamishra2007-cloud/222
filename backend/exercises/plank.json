@@ -1,0 +1,40 @@
+{
+  "id": "plank",
+  "name": "Plank",
+  "category": "gym",
+  "cues": [
+    "Body in a straight line from head to heels",
+    "Hands directly under shoulders",
+    "Engage core — do not let hips sag or pike",
+    "Neutral neck — look at the floor"
+  ],
+  "rules": [
+    {
+      "id": "body_line",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_HIP", "LEFT_ANKLE"],
+      "min_angle": 160,
+      "max_angle": 180,
+      "severity": "major",
+      "feedback_fail": "Straighten your body — hips are too high or too low",
+      "feedback_ok": "Body line is straight"
+    },
+    {
+      "id": "elbow_under_shoulder",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_ELBOW", "LEFT_WRIST"],
+      "min_angle": 80,
+      "max_angle": 100,
+      "severity": "major",
+      "feedback_fail": "Position your hands directly under your shoulders",
+      "feedback_ok": "Hand position is correct"
+    },
+    {
+      "id": "neck_neutral",
+      "landmarks": ["LEFT_SHOULDER", "NOSE", "LEFT_HIP"],
+      "min_angle": 155,
+      "max_angle": 180,
+      "severity": "minor",
+      "feedback_fail": "Keep your neck neutral — look at the floor, not up",
+      "feedback_ok": "Neck is neutral"
+    }
+  ]
+}

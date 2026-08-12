@@ -1,0 +1,41 @@
+{
+  "id": "hip_hinge",
+  "name": "Hip Hinge",
+  "category": "physiotherapy",
+  "cues": [
+    "Stand with feet hip-width apart",
+    "Push hips back as you lean forward",
+    "Maintain a neutral spine — no rounding",
+    "Soft bend in the knees",
+    "Weight through heels"
+  ],
+  "rules": [
+    {
+      "id": "hip_hinge_angle",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_HIP", "LEFT_KNEE"],
+      "min_angle": 70,
+      "max_angle": 110,
+      "severity": "major",
+      "feedback_fail": "Push your hips back further — this is the key movement",
+      "feedback_ok": "Hip hinge depth is correct"
+    },
+    {
+      "id": "spine_neutral",
+      "landmarks": ["LEFT_SHOULDER", "LEFT_HIP", "LEFT_ANKLE"],
+      "min_angle": 150,
+      "max_angle": 180,
+      "severity": "major",
+      "feedback_fail": "Maintain a neutral spine — do not round your back",
+      "feedback_ok": "Spine is neutral"
+    },
+    {
+      "id": "knee_soft_bend",
+      "landmarks": ["LEFT_HIP", "LEFT_KNEE", "LEFT_ANKLE"],
+      "min_angle": 140,
+      "max_angle": 170,
+      "severity": "minor",
+      "feedback_fail": "Soften your knees slightly — avoid locking them",
+      "feedback_ok": "Knee position is good"
+    }
+  ]
+}

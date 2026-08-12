@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: posture-coach
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true          # Render auto-generates a secure random value
+      - key: DATABASE_URL
+        value: sqlite:///./posture_coach.db
+      - key: TOKEN_EXPIRE_MINUTES
+        value: "60"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
