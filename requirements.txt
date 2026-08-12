@@ -1,8 +1,8 @@
 fastapi==0.115.0
 uvicorn[standard]==0.32.0
-mediapipe==1.0.0
-opencv-python-headless==4.10.0.84
-numpy==2.1.0
+mediapipe>=0.10.14
+opencv-python-headless>=4.8.0
+numpy>=1.26.0,<2.0.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 sqlalchemy==2.0.36
