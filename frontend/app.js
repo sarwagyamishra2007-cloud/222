@@ -2,8 +2,8 @@
    AI Posture Coach — Frontend Application
    ============================================================ */
 
-const API = "http://localhost:8000";
-const WS_BASE = "ws://localhost:8000";
+const API = window.location.origin;
+const WS_BASE = window.location.origin.replace(/^http/, "ws");
 
 // ── Utility helpers ───────────────────────────────────────────────────────────
 
