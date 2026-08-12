@@ -170,8 +170,14 @@ def progress_sessions(
 
 # ── WebSocket: real-time pose analysis ───────────────────────────────────────
 
-# One shared PoseDetector instance (MediaPipe is not thread-safe; WS runs in single event loop)
-_detector = PoseDetector()
+# Lazy-loaded shared PoseDetector (avoids crashing at import time if model is missing)
+_detector: PoseDetector = None
+
+def _get_detector() -> PoseDetector:
+    global _detector
+    if _detector is None:
+        _detector = PoseDetector()
+    return _detector
 
 
 @app.websocket("/ws/analyze")
@@ -223,7 +229,7 @@ async def ws_analyze(websocket: WebSocket, exercise_id: str, token: str):
             last_processed = now
 
             # Detect pose
-            landmarks = _detector.detect(frame_bytes)
+            landmarks = _get_detector().detect(frame_bytes)
 
             if landmarks is None:
                 await websocket.send_json({
@@ -240,7 +246,7 @@ async def ws_analyze(websocket: WebSocket, exercise_id: str, token: str):
             fb = generate_feedback(analysis, exercise)
 
             # Draw annotated skeleton
-            annotated = _detector.draw_skeleton(frame_bytes, landmarks, analysis["joint_colors"])
+            annotated = _get_detector().draw_skeleton(frame_bytes, landmarks, analysis["joint_colors"])
             frame_b64 = base64.b64encode(annotated).decode()
 
             rep_number += 1
