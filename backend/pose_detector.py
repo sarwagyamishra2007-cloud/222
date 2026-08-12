@@ -1,4 +1,5 @@
 import os
+import urllib.request
 from typing import Optional
 
 import cv2
@@ -24,11 +25,17 @@ _POSE_CONNECTIONS = [
 # Landmark index → name mapping
 _LANDMARK_NAMES = [lm.name for lm in mp_vision.PoseLandmark]
 
-# Path to the downloaded .task model file
-_MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "backend", "pose_landmarker.task")
+# Path to the .task model file — download automatically if missing
+_MODEL_PATH = os.path.join(os.path.dirname(__file__), "pose_landmarker.task")
+_MODEL_URL = (
+    "https://storage.googleapis.com/mediapipe-models/pose_landmarker/"
+    "pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
+)
+
 if not os.path.isfile(_MODEL_PATH):
-    # fallback — same directory
-    _MODEL_PATH = os.path.join(os.path.dirname(__file__), "pose_landmarker.task")
+    print(f"Downloading pose_landmarker model to {_MODEL_PATH} ...")
+    urllib.request.urlretrieve(_MODEL_URL, _MODEL_PATH)
+    print("Model download complete.")
 
 
 class PoseDetector:
