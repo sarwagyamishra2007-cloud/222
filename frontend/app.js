@@ -141,11 +141,24 @@ const ExerciseSelector = (() => {
 })();
 
 // ── Camera Session ─────────────────────────────────────────────────────────────
+// Skeleton connections: pairs of MediaPipe landmark names
+const _SKEL = [
+  ["LEFT_SHOULDER","RIGHT_SHOULDER"],
+  ["LEFT_SHOULDER","LEFT_ELBOW"],["LEFT_ELBOW","LEFT_WRIST"],
+  ["RIGHT_SHOULDER","RIGHT_ELBOW"],["RIGHT_ELBOW","RIGHT_WRIST"],
+  ["LEFT_SHOULDER","LEFT_HIP"],["RIGHT_SHOULDER","RIGHT_HIP"],
+  ["LEFT_HIP","RIGHT_HIP"],
+  ["LEFT_HIP","LEFT_KNEE"],["LEFT_KNEE","LEFT_ANKLE"],
+  ["RIGHT_HIP","RIGHT_KNEE"],["RIGHT_KNEE","RIGHT_ANKLE"],
+];
+const _COLOR = { green:"#00dd44", red:"#ff3333", yellow:"#ffcc00" };
+
 const CameraSession = (() => {
-  let _ws,_stream,_capIntvl,_localIntvl,_timerIntvl,_exercise,_reps=0,_accSum=0,_accCnt=0,_best=0,_t0=null,_rules=[];
+  let _ws,_stream,_capIntvl,_displayRaf,_timerIntvl,_exercise,_reps=0,_accSum=0,_accCnt=0,_best=0,_t0=null,_rules=[];
   let _lastAnalysis = null;
   let _accBuffer = [];
-  let _lastServerFrame = false;
+  let _lastLandmarks = null;  // latest landmarks from server
+  let _lastJointColors = {};  // latest joint colors from server
 
   const _cap = document.createElement("canvas"); _cap.width=640; _cap.height=480;
   const _capCtx = _cap.getContext("2d");
@@ -169,6 +182,44 @@ const CameraSession = (() => {
       hudLbl.style.color = status==="good"?"var(--good)":status==="needs_work"?"var(--warn)":"var(--bad)";
     }
     $("hud-accuracy").style.display="flex";
+  }
+
+  // ── Draw loop: always 60fps local video + skeleton overlay ─────────────────
+  function drawLoop() {
+    if (_video.readyState >= 2) {
+      const w = _dc.width || 640, h = _dc.height || 480;
+      _dCtx.drawImage(_video, 0, 0, w, h);
+      if (_lastLandmarks) drawSkeleton(w, h);
+    }
+    _displayRaf = requestAnimationFrame(drawLoop);
+  }
+
+  function drawSkeleton(w, h) {
+    const lm = _lastLandmarks, jc = _lastJointColors;
+    // Draw connections
+    _dCtx.lineWidth = 2;
+    _dCtx.strokeStyle = "rgba(200,200,200,0.7)";
+    for (const [a, b] of _SKEL) {
+      const pa = lm[a], pb = lm[b];
+      if (!pa || !pb || pa.visibility < 0.4 || pb.visibility < 0.4) continue;
+      _dCtx.beginPath();
+      _dCtx.moveTo(pa.x * w, pa.y * h);
+      _dCtx.lineTo(pb.x * w, pb.y * h);
+      _dCtx.stroke();
+    }
+    // Draw joints
+    for (const [name, pt] of Object.entries(lm)) {
+      if (pt.visibility < 0.4) continue;
+      const color = _COLOR[jc[name]] || _COLOR.green;
+      const cx = pt.x * w, cy = pt.y * h;
+      _dCtx.beginPath();
+      _dCtx.arc(cx, cy, 5, 0, Math.PI * 2);
+      _dCtx.fillStyle = color;
+      _dCtx.fill();
+      _dCtx.lineWidth = 1;
+      _dCtx.strokeStyle = "#fff";
+      _dCtx.stroke();
+    }
   }
 
   function startTimer() {
@@ -204,23 +255,14 @@ const CameraSession = (() => {
     _ws.binaryType = "arraybuffer";
     _ws.onopen = () => {
       $("canvas-overlay").classList.add("hidden");
-      // Send frames to server at 30fps
-      _capIntvl = setInterval(sendFrame, 33);
-      // Draw local video to canvas at 30fps so it's always smooth
-      _localIntvl = setInterval(drawLocal, 33);
+      // Send frames to server for analysis at ~12fps (80ms)
+      _capIntvl = setInterval(sendFrame, 80);
+      // Draw local video + skeleton at 60fps via rAF
+      drawLoop();
     };
     _ws.onmessage = e => { try { handleMsg(JSON.parse(e.data)); } catch(_) {} };
-    _ws.onclose = () => { clearInterval(_capIntvl); clearInterval(_localIntvl); stopTimer(); showSummary(); };
+    _ws.onclose = () => { clearInterval(_capIntvl); cancelAnimationFrame(_displayRaf); stopTimer(); showSummary(); };
     _ws.onerror = e => console.error("WS error", e);
-  }
-
-  // Draw local video frame directly — keeps display smooth even when server is slow
-  function drawLocal() {
-    if (_lastServerFrame) return; // once server starts sending, stop overwriting
-    if (_video.readyState >= 2) {
-      _dc.width = _dc.width || 640;
-      _dCtx.drawImage(_video, 0, 0, _dc.width, _dc.height || 480);
-    }
   }
 
   function sendFrame() {
@@ -233,15 +275,12 @@ const CameraSession = (() => {
   }
 
   function handleMsg(data) {
-    if (data.frame) {
-      _lastServerFrame = true;
-      const img = new Image();
-      img.onload = () => {
-        _dc.width  = img.width  || 640;
-        _dc.height = img.height || 480;
-        _dCtx.drawImage(img, 0, 0);
-      };
-      img.src = "data:image/jpeg;base64," + data.frame;
+    // Update landmarks for the client-side skeleton draw loop
+    if (data.landmarks) {
+      _lastLandmarks = data.landmarks;
+      _lastJointColors = data.joint_colors || {};
+    } else if (data.pose_detected === false) {
+      _lastLandmarks = null;
     }
     if (data.feedback) updateFeedback(data.feedback);
     if (data.analysis) { updateAngles(data.analysis); _lastAnalysis=data.analysis; }
@@ -334,7 +373,7 @@ const CameraSession = (() => {
 
   function stop() {
     if (_ws?.readyState===WebSocket.OPEN) _ws.close();
-    clearInterval(_capIntvl); clearInterval(_localIntvl); stopTimer();
+    clearInterval(_capIntvl); cancelAnimationFrame(_displayRaf); stopTimer();
     if (_stream) { _stream.getTracks().forEach(t=>t.stop()); _stream=null; }
   }
 

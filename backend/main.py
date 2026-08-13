@@ -1,4 +1,3 @@
-import base64
 import json
 import os
 import sys
@@ -396,7 +395,7 @@ async def ws_analyze(websocket: WebSocket, exercise_id: str, token: str):
         ex_session = create_session(db, user.id, exercise)
         rep_number = 0
         last_processed = 0.0
-        _THROTTLE_MS = 33  # ~30fps
+        _THROTTLE_MS = 80  # ~12fps analysis — display is handled client-side at 60fps
 
         # Smoothing buffer for accuracy (rolling avg over last 5 frames)
         accuracy_buffer: list[float] = []
@@ -416,12 +415,12 @@ async def ws_analyze(websocket: WebSocket, exercise_id: str, token: str):
 
             if landmarks is None:
                 await websocket.send_json({
-                    "frame": base64.b64encode(frame_bytes).decode(),
                     "pose_detected": False,
                     "feedback": {"messages": ["Stand in front of the camera — no pose detected"], "accuracy_pct": 0, "status": "poor"},
                     "analysis": None,
                     "rep_number": rep_number,
                     "symmetry": None,
+                    "landmarks": None,
                 })
                 continue
 
@@ -437,15 +436,19 @@ async def ws_analyze(websocket: WebSocket, exercise_id: str, token: str):
             # Compute left/right body symmetry score
             symmetry = compute_symmetry(landmarks)
 
-            annotated = _get_detector().draw_skeleton(frame_bytes, landmarks, analysis["joint_colors"])
-            frame_b64 = base64.b64encode(annotated).decode()
-
             rep_number += 1
             log_rep(db, ex_session.id, rep_number, smoothed_accuracy, [r["feedback"] for r in analysis["failing_rules"]])
 
+            # Send landmarks as normalized coords — client draws skeleton (no server frame encode)
+            lm_payload = {
+                name: {"x": pt["x"], "y": pt["y"], "visibility": pt["visibility"]}
+                for name, pt in landmarks.items()
+            }
+
             await websocket.send_json({
-                "frame": frame_b64,
                 "pose_detected": True,
+                "landmarks": lm_payload,
+                "joint_colors": analysis["joint_colors"],
                 "analysis": {
                     "accuracy_pct": smoothed_accuracy,
                     "raw_accuracy_pct": analysis["accuracy_pct"],
