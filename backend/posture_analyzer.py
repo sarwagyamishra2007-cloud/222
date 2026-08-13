@@ -1,5 +1,5 @@
 import math
-from typing import Any
+from typing import Any, Optional
 
 
 def compute_angle(
@@ -129,4 +129,54 @@ def analyze(
         "joint_colors": joint_colors,
         "angles": angles,
         "rule_scores": rule_scores,
+    }
+
+
+def compute_symmetry(landmarks: dict[str, dict[str, float]]) -> Optional[dict]:
+    """
+    Unique feature: compute left/right body symmetry score.
+    Compares paired landmarks (shoulders, hips, knees, elbows, wrists, ankles).
+    Returns a 0-100 symmetry score + per-pair breakdown.
+    """
+    PAIRS = [
+        ("LEFT_SHOULDER",  "RIGHT_SHOULDER"),
+        ("LEFT_HIP",       "RIGHT_HIP"),
+        ("LEFT_KNEE",      "RIGHT_KNEE"),
+        ("LEFT_ELBOW",     "RIGHT_ELBOW"),
+        ("LEFT_WRIST",     "RIGHT_WRIST"),
+        ("LEFT_ANKLE",     "RIGHT_ANKLE"),
+    ]
+
+    scores = []
+    breakdown = []
+
+    for left_name, right_name in PAIRS:
+        if left_name not in landmarks or right_name not in landmarks:
+            continue
+        l = landmarks[left_name]
+        r = landmarks[right_name]
+        if l.get("visibility", 0) < 0.4 or r.get("visibility", 0) < 0.4:
+            continue
+
+        # Compare Y position (height) — symmetric body parts should be at same height
+        y_diff = abs(l["y"] - r["y"])
+        # 0 diff = 100%, 0.1 diff (10% frame height) = ~0%
+        pair_score = max(0.0, 100.0 - y_diff * 1000)
+
+        joint_name = left_name.replace("LEFT_", "").replace("_", " ").title()
+        breakdown.append({
+            "joint": joint_name,
+            "score": round(pair_score, 1),
+            "ok": pair_score >= 70,
+        })
+        scores.append(pair_score)
+
+    if not scores:
+        return None
+
+    overall = round(sum(scores) / len(scores), 1)
+    return {
+        "score": overall,
+        "status": "balanced" if overall >= 75 else "slight_imbalance" if overall >= 50 else "imbalanced",
+        "breakdown": breakdown,
     }

@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI Posture Coach</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/static/style.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
 <!-- ── App Header ─────────────────────────────────────────────────────────── -->
 <header class="app-header hidden" id="app-header">
-  <div class="logo">
-    <span class="logo-icon">🧘</span>
-    <span class="logo-text">AI Posture Coach</span>
-  </div>
+  <div class="logo"><span class="logo-icon">🧘</span><span class="logo-text">AI Posture Coach</span></div>
   <nav>
     <button id="btn-nav-exercises" class="active">Exercises</button>
     <button id="btn-nav-progress">Progress</button>
+    <button id="btn-nav-coach">🤖 Coach</button>
     <button id="btn-theme" title="Toggle theme">🌙</button>
     <button id="btn-logout">Logout</button>
   </nav>
@@ -33,36 +31,18 @@
       <button id="tab-login" class="active" onclick="Auth.showTab('login')">Login</button>
       <button id="tab-register" onclick="Auth.showTab('register')">Register</button>
     </div>
-
     <div id="form-login">
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" id="login-username" placeholder="Enter username" autocomplete="username" />
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" />
-      </div>
+      <div class="form-group"><label>Username</label><input type="text" id="login-username" placeholder="Enter username" autocomplete="username"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password"/></div>
       <button class="btn-primary" onclick="Auth.login()">Login</button>
     </div>
-
     <div id="form-register" class="hidden">
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" id="reg-username" placeholder="Choose a username" autocomplete="username" />
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="reg-password" placeholder="At least 4 characters" autocomplete="new-password" />
-      </div>
+      <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="Choose a username" autocomplete="username"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="At least 4 characters" autocomplete="new-password"/></div>
       <button class="btn-primary" onclick="Auth.register()">Create Account</button>
     </div>
-
     <div class="auth-error" id="auth-error"></div>
-
-    <div class="disclaimer" style="margin-top:18px">
-      <strong>Note:</strong> Fitness guidance only — not a substitute for a qualified physiotherapist.
-    </div>
+    <div class="disclaimer" style="margin-top:18px"><strong>Note:</strong> Fitness guidance only — not a substitute for a qualified physiotherapist.</div>
   </div>
 </div>
 
@@ -72,21 +52,22 @@
     <h2>Choose an Exercise</h2>
     <div id="user-stats" class="user-stats"></div>
   </div>
+
+  <!-- Streak banner -->
+  <div id="streak-banner" class="streak-banner hidden"></div>
+
   <div class="category-tabs">
-    <button class="active" onclick="ExerciseSelector.filter('all', this)">All</button>
-    <button onclick="ExerciseSelector.filter('yoga', this)">🧘 Yoga</button>
-    <button onclick="ExerciseSelector.filter('gym', this)">💪 Gym</button>
-    <button onclick="ExerciseSelector.filter('physiotherapy', this)">🏥 Physio</button>
+    <button class="active" onclick="ExerciseSelector.filter('all',this)">All</button>
+    <button onclick="ExerciseSelector.filter('yoga',this)">🧘 Yoga</button>
+    <button onclick="ExerciseSelector.filter('gym',this)">💪 Gym</button>
+    <button onclick="ExerciseSelector.filter('physiotherapy',this)">🏥 Physio</button>
   </div>
   <div class="exercise-grid" id="exercise-grid"></div>
-  <div class="disclaimer">
-    <strong>Disclaimer:</strong> This system provides posture and movement guidance for fitness purposes only.
-    It does not diagnose medical conditions. Consult a healthcare professional before starting any new exercise program.
-  </div>
+  <div class="disclaimer"><strong>Disclaimer:</strong> Posture and movement guidance for fitness purposes only. Not a substitute for a healthcare professional.</div>
 </div>
 
 <!-- ── Camera View ────────────────────────────────────────────────────────── -->
-<div id="camera-view" class="view hidden">
+<div id="camera-view" class="hidden">
   <div class="camera-topbar">
     <button class="btn-secondary" onclick="CameraSession.back()">← Back</button>
     <div class="session-info">
@@ -97,94 +78,86 @@
   </div>
 
   <div class="camera-layout">
-    <!-- Left: video canvas -->
     <div class="video-wrapper">
       <canvas id="display-canvas" width="640" height="480"></canvas>
-      <div class="canvas-overlay" id="canvas-overlay">
-        <div class="connecting-msg">Connecting camera…</div>
+      <div class="canvas-overlay" id="canvas-overlay"><div class="connecting-msg">Connecting camera…</div></div>
+
+      <!-- Symmetry meter overlay on video -->
+      <div class="symmetry-overlay" id="symmetry-overlay" style="display:none">
+        <div class="sym-label">Body Symmetry</div>
+        <div class="sym-value" id="sym-value">—</div>
+        <div class="sym-bar-wrap"><div class="sym-bar" id="sym-bar" style="width:0%"></div></div>
       </div>
-      <!-- Session summary overlay -->
+
+      <!-- Session summary -->
       <div id="session-summary" class="hidden">
         <div class="summary-inner">
+          <div id="confetti-canvas" class="confetti-area"></div>
           <div class="summary-title">Session Complete 🎉</div>
           <div class="summary-grid">
-            <div class="summary-box">
-              <div class="summary-stat" id="summary-accuracy">—</div>
-              <div class="summary-label">Avg Accuracy</div>
-            </div>
-            <div class="summary-box">
-              <div class="summary-stat" id="summary-reps">—</div>
-              <div class="summary-label">Frames</div>
-            </div>
-            <div class="summary-box">
-              <div class="summary-stat" id="summary-best">—</div>
-              <div class="summary-label">Best Score</div>
-            </div>
-            <div class="summary-box">
-              <div class="summary-stat" id="summary-duration">—</div>
-              <div class="summary-label">Duration</div>
-            </div>
+            <div class="summary-box"><div class="summary-stat" id="summary-accuracy">—</div><div class="summary-label">Avg Accuracy</div></div>
+            <div class="summary-box"><div class="summary-stat" id="summary-reps">—</div><div class="summary-label">Frames</div></div>
+            <div class="summary-box"><div class="summary-stat" id="summary-best">—</div><div class="summary-label">Best Score</div></div>
+            <div class="summary-box"><div class="summary-stat" id="summary-duration">—</div><div class="summary-label">Duration</div></div>
           </div>
           <div class="summary-grade" id="summary-grade"></div>
-          <button class="btn-primary" style="margin-top:16px;width:200px" onclick="CameraSession.back()">
-            Back to Exercises
-          </button>
+          <div id="pb-badge" class="pb-badge hidden">🏆 NEW PERSONAL BEST!</div>
+          <button class="btn-primary" style="margin-top:16px;width:200px" onclick="CameraSession.back()">Back to Exercises</button>
         </div>
       </div>
     </div>
 
-    <!-- Right: feedback panel -->
     <div class="feedback-panel">
-
-      <!-- Accuracy card -->
+      <!-- Accuracy ring -->
       <div class="panel-card accent-card">
         <div class="panel-card-header">
           <h4>Accuracy</h4>
           <span id="pose-confidence" class="confidence-badge">—</span>
         </div>
         <div class="accuracy-display">
-          <div class="accuracy-ring" id="accuracy-ring">
+          <div class="accuracy-ring">
             <svg viewBox="0 0 80 80"><circle class="ring-bg" cx="40" cy="40" r="34"/><circle class="ring-fill" id="ring-path" cx="40" cy="40" r="34" stroke-dasharray="213.6" stroke-dashoffset="213.6"/></svg>
             <div class="accuracy-value" id="accuracy-value">—</div>
           </div>
-          <div class="accuracy-bar-wrap">
-            <div class="accuracy-bar-fill" id="accuracy-bar" style="width:0%"></div>
-          </div>
+          <div class="accuracy-bar-wrap"><div class="accuracy-bar-fill" id="accuracy-bar" style="width:0%"></div></div>
           <div class="accuracy-status" id="accuracy-status">Waiting…</div>
         </div>
       </div>
 
-      <!-- Live angles card -->
+      <!-- Live joint angles -->
       <div class="panel-card">
         <h4>Live Joint Angles</h4>
-        <div id="angles-list" class="angles-list">
-          <span class="muted-text">Detecting pose…</span>
-        </div>
+        <div id="angles-list" class="angles-list"><span class="muted-text">Detecting pose…</span></div>
       </div>
 
-      <!-- Feedback card -->
+      <!-- Symmetry score -->
+      <div class="panel-card" id="symmetry-card" style="display:none">
+        <div class="panel-card-header">
+          <h4>Body Symmetry</h4>
+          <span id="sym-status-badge" class="confidence-badge">—</span>
+        </div>
+        <div id="sym-breakdown" class="sym-breakdown"></div>
+      </div>
+
+      <!-- Feedback -->
       <div class="panel-card">
         <div class="panel-card-header">
           <h4>Corrections</h4>
           <label class="voice-toggle" title="Voice feedback">
-            <input type="checkbox" id="voice-toggle" />
+            <input type="checkbox" id="voice-toggle"/>
             <span>🔊 Voice</span>
           </label>
         </div>
-        <ul class="feedback-messages" id="feedback-list">
-          <li class="ok">Waiting for pose detection…</li>
-        </ul>
+        <ul class="feedback-messages" id="feedback-list"><li class="ok">Waiting for pose detection…</li></ul>
       </div>
 
-      <!-- Exercise tips card -->
+      <!-- Tips -->
       <div class="panel-card">
         <h4>Tips</h4>
         <ul class="feedback-messages" id="cues-list"></ul>
       </div>
 
-      <div class="disclaimer">
-        <strong>Reminder:</strong> Stop immediately if you feel pain. Guidance only, not medical advice.
-      </div>
+      <div class="disclaimer"><strong>Reminder:</strong> Stop if you feel pain. Guidance only, not medical advice.</div>
     </div>
   </div>
 </div>
@@ -194,16 +167,44 @@
   <h2>My Progress</h2>
 
   <div class="stats-row" id="stats-row">
-    <div class="stat-card"><div class="stat-value" id="stat-total-sessions">—</div><div class="stat-label">Total Sessions</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-total-sessions">—</div><div class="stat-label">Sessions</div></div>
     <div class="stat-card"><div class="stat-value" id="stat-best-accuracy">—</div><div class="stat-label">Best Accuracy</div></div>
-    <div class="stat-card"><div class="stat-value" id="stat-total-time">—</div><div class="stat-label">Exercises Done</div></div>
+    <div class="stat-card streak-stat"><div class="stat-value" id="stat-streak">—</div><div class="stat-label">🔥 Streak</div></div>
     <div class="stat-card"><div class="stat-value" id="stat-top-exercise">—</div><div class="stat-label">Top Exercise</div></div>
   </div>
 
+  <!-- Activity heatmap -->
+  <div class="panel-card" style="margin-bottom:16px">
+    <div class="panel-card-header" style="margin-bottom:12px">
+      <h4>Activity — Last 90 Days</h4>
+      <span id="longest-streak-badge" class="confidence-badge">Longest: —</span>
+    </div>
+    <div id="heatmap-grid" class="heatmap-grid"></div>
+  </div>
+
+  <!-- Trend line chart -->
+  <div class="progress-chart-wrap" style="margin-bottom:16px">
+    <div class="panel-card-header" style="margin-bottom:8px;padding:0">
+      <h4 style="text-transform:none;font-size:13px;color:var(--text);font-weight:700">Accuracy Trend</h4>
+      <select id="trend-exercise-filter" class="filter-select" onchange="ProgressView.loadTrend()">
+        <option value="">All Exercises</option>
+      </select>
+    </div>
+    <canvas id="trend-chart"></canvas>
+  </div>
+
+  <!-- Bar chart -->
   <div class="progress-chart-wrap">
     <canvas id="progress-chart"></canvas>
   </div>
 
+  <!-- Personal bests -->
+  <div class="panel-card" style="margin-bottom:16px">
+    <h4 style="margin-bottom:14px;text-transform:none;font-size:14px;font-weight:700;color:var(--text)">🏆 Personal Bests</h4>
+    <div id="personal-bests-grid" class="pb-grid"></div>
+  </div>
+
+  <!-- Session history -->
   <div class="panel-card">
     <div class="panel-card-header" style="margin-bottom:12px">
       <h4>Session History</h4>
@@ -211,18 +212,57 @@
         <option value="">All Exercises</option>
       </select>
     </div>
-    <table class="sessions-table" id="sessions-table">
-      <thead>
-        <tr>
-          <th>Exercise</th><th>Category</th><th>Date</th>
-          <th>Avg Accuracy</th><th>Frames</th>
-        </tr>
-      </thead>
+    <table class="sessions-table">
+      <thead><tr><th>Exercise</th><th>Category</th><th>Date</th><th>Avg Accuracy</th><th>Frames</th></tr></thead>
       <tbody id="sessions-tbody"></tbody>
     </table>
   </div>
 </div>
 
+<!-- ── AI Coach View ──────────────────────────────────────────────────────── -->
+<div id="coach-view" class="view hidden">
+  <h2>🤖 AI Coach</h2>
+
+  <div class="coach-layout">
+    <!-- Tip card -->
+    <div class="panel-card coach-tip-card" id="coach-tip-card">
+      <div class="coach-tip-emoji" id="coach-emoji">💡</div>
+      <div class="coach-tip-text" id="coach-tip-text">Loading your personalised tip…</div>
+      <div class="coach-focus" id="coach-focus"></div>
+    </div>
+
+    <!-- Muscle focus guide -->
+    <div class="panel-card">
+      <h4 style="margin-bottom:14px;text-transform:none;font-size:14px;font-weight:700;color:var(--text)">🏋️ What to Focus On</h4>
+      <div id="muscle-guide" class="muscle-guide"></div>
+    </div>
+
+    <!-- Improvement suggestions -->
+    <div class="panel-card">
+      <h4 style="margin-bottom:14px;text-transform:none;font-size:14px;font-weight:700;color:var(--text)">📈 Your Improvement Plan</h4>
+      <div id="improvement-plan" class="improvement-plan">
+        <div class="muted-text">Complete sessions to unlock your plan.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confetti script (tiny vanilla) -->
+<script>
+function launchConfetti() {
+  const area = document.getElementById("confetti-canvas");
+  if (!area) return;
+  area.innerHTML = "";
+  const colors = ["#4f8ef7","#22c55e","#f59e0b","#a78bfa","#ef4444"];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement("div");
+    el.className = "confetti-piece";
+    el.style.cssText = `left:${Math.random()*100}%;background:${colors[i%colors.length]};animation-delay:${Math.random()*1.5}s;animation-duration:${1+Math.random()}s`;
+    area.appendChild(el);
+  }
+  setTimeout(() => { area.innerHTML = ""; }, 4000);
+}
+</script>
 <script src="/static/app.js"></script>
 </body>
 </html>
