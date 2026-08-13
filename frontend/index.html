@@ -5,25 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Posture Coach</title>
   <link rel="stylesheet" href="/static/style.css" />
-  <!-- Chart.js for progress dashboard -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
-<!-- ── App Header ──────────────────────────────────────────────────────────── -->
+<!-- ── App Header ─────────────────────────────────────────────────────────── -->
 <header class="app-header hidden" id="app-header">
-  <span class="logo">🧘 AI Posture Coach</span>
+  <div class="logo">
+    <span class="logo-icon">🧘</span>
+    <span class="logo-text">AI Posture Coach</span>
+  </div>
   <nav>
     <button id="btn-nav-exercises" class="active">Exercises</button>
     <button id="btn-nav-progress">Progress</button>
+    <button id="btn-theme" title="Toggle theme">🌙</button>
     <button id="btn-logout">Logout</button>
   </nav>
 </header>
 
-<!-- ── Auth View ───────────────────────────────────────────────────────────── -->
+<!-- ── Auth View ──────────────────────────────────────────────────────────── -->
 <div id="auth-view">
   <div class="auth-card">
+    <div class="auth-logo">🧘</div>
     <h2>AI Posture Coach</h2>
+    <p class="auth-sub">Real-time AI-powered movement analysis</p>
     <div class="auth-tabs">
       <button id="tab-login" class="active" onclick="Auth.showTab('login')">Login</button>
       <button id="tab-register" onclick="Auth.showTab('register')">Register</button>
@@ -56,95 +61,156 @@
     <div class="auth-error" id="auth-error"></div>
 
     <div class="disclaimer" style="margin-top:18px">
-      <strong>Note:</strong> This system provides fitness guidance only and is
-      not a substitute for a qualified physiotherapist or doctor.
+      <strong>Note:</strong> Fitness guidance only — not a substitute for a qualified physiotherapist.
     </div>
   </div>
 </div>
 
-<!-- ── Exercise View ───────────────────────────────────────────────────────── -->
+<!-- ── Exercise View ──────────────────────────────────────────────────────── -->
 <div id="exercise-view" class="view hidden">
-  <h2>Choose an Exercise</h2>
+  <div class="view-header">
+    <h2>Choose an Exercise</h2>
+    <div id="user-stats" class="user-stats"></div>
+  </div>
   <div class="category-tabs">
     <button class="active" onclick="ExerciseSelector.filter('all', this)">All</button>
-    <button onclick="ExerciseSelector.filter('yoga', this)">Yoga</button>
-    <button onclick="ExerciseSelector.filter('gym', this)">Gym</button>
-    <button onclick="ExerciseSelector.filter('physiotherapy', this)">Physiotherapy</button>
+    <button onclick="ExerciseSelector.filter('yoga', this)">🧘 Yoga</button>
+    <button onclick="ExerciseSelector.filter('gym', this)">💪 Gym</button>
+    <button onclick="ExerciseSelector.filter('physiotherapy', this)">🏥 Physio</button>
   </div>
   <div class="exercise-grid" id="exercise-grid"></div>
-
   <div class="disclaimer">
     <strong>Disclaimer:</strong> This system provides posture and movement guidance for fitness purposes only.
-    It does not diagnose medical conditions and is not a substitute for a qualified physiotherapist or doctor.
-    Consult a healthcare professional before starting any new exercise program.
+    It does not diagnose medical conditions. Consult a healthcare professional before starting any new exercise program.
   </div>
 </div>
 
-<!-- ── Camera View ─────────────────────────────────────────────────────────── -->
+<!-- ── Camera View ────────────────────────────────────────────────────────── -->
 <div id="camera-view" class="view hidden">
-  <h2 id="camera-title">Exercise</h2>
-
-  <div class="camera-controls">
+  <div class="camera-topbar">
     <button class="btn-secondary" onclick="CameraSession.back()">← Back</button>
-    <button class="btn-danger" id="btn-stop" onclick="CameraSession.stop()">Stop Session</button>
+    <div class="session-info">
+      <span id="camera-title" class="session-title">Exercise</span>
+      <span class="timer-badge" id="session-timer">00:00</span>
+    </div>
+    <button class="btn-danger" id="btn-stop" onclick="CameraSession.stop()">■ Stop</button>
   </div>
 
   <div class="camera-layout">
-    <!-- Left: live video canvas -->
+    <!-- Left: video canvas -->
     <div class="video-wrapper">
       <canvas id="display-canvas" width="640" height="480"></canvas>
+      <div class="canvas-overlay" id="canvas-overlay">
+        <div class="connecting-msg">Connecting camera…</div>
+      </div>
+      <!-- Session summary overlay -->
       <div id="session-summary" class="hidden">
-        <h3>Session Complete</h3>
-        <div class="summary-stat" id="summary-accuracy">—</div>
-        <div class="summary-label">Average Accuracy</div>
-        <div class="summary-stat" id="summary-reps">—</div>
-        <div class="summary-label">Frames Analyzed</div>
-        <button class="btn-primary" style="margin-top:12px;width:200px" onclick="CameraSession.back()">
-          Back to Exercises
-        </button>
+        <div class="summary-inner">
+          <div class="summary-title">Session Complete 🎉</div>
+          <div class="summary-grid">
+            <div class="summary-box">
+              <div class="summary-stat" id="summary-accuracy">—</div>
+              <div class="summary-label">Avg Accuracy</div>
+            </div>
+            <div class="summary-box">
+              <div class="summary-stat" id="summary-reps">—</div>
+              <div class="summary-label">Frames</div>
+            </div>
+            <div class="summary-box">
+              <div class="summary-stat" id="summary-best">—</div>
+              <div class="summary-label">Best Score</div>
+            </div>
+            <div class="summary-box">
+              <div class="summary-stat" id="summary-duration">—</div>
+              <div class="summary-label">Duration</div>
+            </div>
+          </div>
+          <div class="summary-grade" id="summary-grade"></div>
+          <button class="btn-primary" style="margin-top:16px;width:200px" onclick="CameraSession.back()">
+            Back to Exercises
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Right: feedback panel -->
     <div class="feedback-panel">
-      <div class="panel-card">
-        <h4>Accuracy</h4>
+
+      <!-- Accuracy card -->
+      <div class="panel-card accent-card">
+        <div class="panel-card-header">
+          <h4>Accuracy</h4>
+          <span id="pose-confidence" class="confidence-badge">—</span>
+        </div>
         <div class="accuracy-display">
-          <div class="accuracy-value" id="accuracy-value">—</div>
-          <div class="accuracy-bar-wrap">
-            <div class="accuracy-bar-fill" id="accuracy-bar" style="width:0%;background:var(--muted)"></div>
+          <div class="accuracy-ring" id="accuracy-ring">
+            <svg viewBox="0 0 80 80"><circle class="ring-bg" cx="40" cy="40" r="34"/><circle class="ring-fill" id="ring-path" cx="40" cy="40" r="34" stroke-dasharray="213.6" stroke-dashoffset="213.6"/></svg>
+            <div class="accuracy-value" id="accuracy-value">—</div>
           </div>
+          <div class="accuracy-bar-wrap">
+            <div class="accuracy-bar-fill" id="accuracy-bar" style="width:0%"></div>
+          </div>
+          <div class="accuracy-status" id="accuracy-status">Waiting…</div>
         </div>
       </div>
 
+      <!-- Live angles card -->
       <div class="panel-card">
-        <h4>Feedback</h4>
+        <h4>Live Joint Angles</h4>
+        <div id="angles-list" class="angles-list">
+          <span class="muted-text">Detecting pose…</span>
+        </div>
+      </div>
+
+      <!-- Feedback card -->
+      <div class="panel-card">
+        <div class="panel-card-header">
+          <h4>Corrections</h4>
+          <label class="voice-toggle" title="Voice feedback">
+            <input type="checkbox" id="voice-toggle" />
+            <span>🔊 Voice</span>
+          </label>
+        </div>
         <ul class="feedback-messages" id="feedback-list">
           <li class="ok">Waiting for pose detection…</li>
         </ul>
       </div>
 
+      <!-- Exercise tips card -->
       <div class="panel-card">
-        <h4>Exercise Tips</h4>
+        <h4>Tips</h4>
         <ul class="feedback-messages" id="cues-list"></ul>
       </div>
 
       <div class="disclaimer">
-        <strong>Reminder:</strong> Stop immediately if you feel pain or discomfort.
-        This is guidance only, not medical advice.
+        <strong>Reminder:</strong> Stop immediately if you feel pain. Guidance only, not medical advice.
       </div>
     </div>
   </div>
 </div>
 
-<!-- ── Progress View ───────────────────────────────────────────────────────── -->
+<!-- ── Progress View ──────────────────────────────────────────────────────── -->
 <div id="progress-view" class="view hidden">
   <h2>My Progress</h2>
+
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card"><div class="stat-value" id="stat-total-sessions">—</div><div class="stat-label">Total Sessions</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-best-accuracy">—</div><div class="stat-label">Best Accuracy</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-total-time">—</div><div class="stat-label">Exercises Done</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-top-exercise">—</div><div class="stat-label">Top Exercise</div></div>
+  </div>
+
   <div class="progress-chart-wrap">
     <canvas id="progress-chart"></canvas>
   </div>
+
   <div class="panel-card">
-    <h4 style="margin-bottom:12px">Session History</h4>
+    <div class="panel-card-header" style="margin-bottom:12px">
+      <h4>Session History</h4>
+      <select id="filter-exercise" class="filter-select" onchange="ProgressView.filterSessions()">
+        <option value="">All Exercises</option>
+      </select>
+    </div>
     <table class="sessions-table" id="sessions-table">
       <thead>
         <tr>
