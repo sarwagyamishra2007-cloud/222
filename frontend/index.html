@@ -73,18 +73,38 @@
     <div class="session-info">
       <span id="camera-title" class="session-title">Exercise</span>
       <span class="timer-badge" id="session-timer">00:00</span>
+      <span id="pose-confidence" class="confidence-badge">—</span>
     </div>
     <button class="btn-danger" id="btn-stop" onclick="CameraSession.stop()">■ Stop</button>
   </div>
 
   <div class="camera-layout">
+    <!-- LEFT: video + overlays -->
     <div class="video-wrapper">
       <canvas id="display-canvas" width="640" height="480"></canvas>
-      <div class="canvas-overlay" id="canvas-overlay"><div class="connecting-msg">Connecting camera…</div></div>
+      <div class="canvas-overlay" id="canvas-overlay">
+        <div class="connecting-msg">
+          <div class="connecting-spinner"></div>
+          Connecting camera…
+        </div>
+      </div>
 
-      <!-- Symmetry meter overlay on video -->
+      <!-- HUD: accuracy score on video -->
+      <div class="hud-accuracy" id="hud-accuracy" style="display:none">
+        <div class="hud-ring">
+          <svg viewBox="0 0 56 56">
+            <circle class="hud-ring-bg" cx="28" cy="28" r="22"/>
+            <circle class="hud-ring-fill" id="hud-ring-path" cx="28" cy="28" r="22"
+              stroke-dasharray="138.2" stroke-dashoffset="138.2"/>
+          </svg>
+          <div class="hud-ring-val" id="hud-acc-val">—</div>
+        </div>
+        <div class="hud-label" id="hud-status-label">Waiting…</div>
+      </div>
+
+      <!-- HUD: symmetry bottom-left -->
       <div class="symmetry-overlay" id="symmetry-overlay" style="display:none">
-        <div class="sym-label">Body Symmetry</div>
+        <div class="sym-label">⚖ Symmetry</div>
         <div class="sym-value" id="sym-value">—</div>
         <div class="sym-bar-wrap"><div class="sym-bar" id="sym-bar" style="width:0%"></div></div>
       </div>
@@ -107,31 +127,57 @@
       </div>
     </div>
 
+    <!-- RIGHT: analysis panel -->
     <div class="feedback-panel">
-      <!-- Accuracy ring -->
-      <div class="panel-card accent-card">
-        <div class="panel-card-header">
-          <h4>Accuracy</h4>
-          <span id="pose-confidence" class="confidence-badge">—</span>
-        </div>
-        <div class="accuracy-display">
-          <div class="accuracy-ring">
-            <svg viewBox="0 0 80 80"><circle class="ring-bg" cx="40" cy="40" r="34"/><circle class="ring-fill" id="ring-path" cx="40" cy="40" r="34" stroke-dasharray="213.6" stroke-dashoffset="213.6"/></svg>
-            <div class="accuracy-value" id="accuracy-value">—</div>
+
+      <!-- Big accuracy card -->
+      <div class="panel-card acc-hero-card">
+        <div class="acc-hero-inner">
+          <!-- Large animated ring -->
+          <div class="acc-hero-ring">
+            <svg viewBox="0 0 120 120">
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#4f8ef7"/>
+                  <stop offset="100%" stop-color="#7c5cd8"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-bg2" cx="60" cy="60" r="50"/>
+              <circle class="ring-track" cx="60" cy="60" r="50"/>
+              <circle class="ring-fill2" id="ring-path" cx="60" cy="60" r="50"
+                stroke-dasharray="314.2" stroke-dashoffset="314.2"/>
+            </svg>
+            <div class="acc-hero-val">
+              <div class="acc-hero-num" id="accuracy-value">—</div>
+              <div class="acc-hero-sub" id="accuracy-status">Waiting</div>
+            </div>
           </div>
-          <div class="accuracy-bar-wrap"><div class="accuracy-bar-fill" id="accuracy-bar" style="width:0%"></div></div>
-          <div class="accuracy-status" id="accuracy-status">Waiting…</div>
+          <!-- Right side: bar + status -->
+          <div class="acc-hero-right">
+            <div class="acc-hero-label">ACCURACY</div>
+            <div class="acc-bar-stack">
+              <div class="acc-bar-track">
+                <div class="acc-bar-fill" id="accuracy-bar" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="acc-pills" id="acc-pills">
+              <span class="acc-pill muted">Waiting for pose…</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Live joint angles -->
-      <div class="panel-card">
-        <h4>Live Joint Angles</h4>
+      <!-- Joint angles - pill style -->
+      <div class="panel-card angles-card">
+        <div class="panel-card-header">
+          <h4>Joint Angles</h4>
+          <span id="pose-confidence-panel" class="confidence-badge">—</span>
+        </div>
         <div id="angles-list" class="angles-list"><span class="muted-text">Detecting pose…</span></div>
       </div>
 
-      <!-- Symmetry score -->
-      <div class="panel-card" id="symmetry-card" style="display:none">
+      <!-- Symmetry -->
+      <div class="panel-card sym-card" id="symmetry-card" style="display:none">
         <div class="panel-card-header">
           <h4>Body Symmetry</h4>
           <span id="sym-status-badge" class="confidence-badge">—</span>
@@ -139,11 +185,11 @@
         <div id="sym-breakdown" class="sym-breakdown"></div>
       </div>
 
-      <!-- Feedback -->
-      <div class="panel-card">
+      <!-- Corrections -->
+      <div class="panel-card corrections-card">
         <div class="panel-card-header">
           <h4>Corrections</h4>
-          <label class="voice-toggle" title="Voice feedback">
+          <label class="voice-toggle">
             <input type="checkbox" id="voice-toggle"/>
             <span>🔊 Voice</span>
           </label>

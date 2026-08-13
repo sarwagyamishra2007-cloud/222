@@ -152,9 +152,22 @@ const CameraSession = (() => {
   const _dc = $("display-canvas"), _dCtx = _dc.getContext("2d");
 
   function updateRing(pct, status) {
+    // Big hero ring (314.2 circumference)
     const r = $("ring-path"); if(!r) return;
-    r.style.strokeDashoffset = 213.6 - (pct/100)*213.6;
-    r.style.stroke = status==="good"?"var(--good)":status==="needs_work"?"var(--warn)":"var(--bad)";
+    r.style.strokeDashoffset = 314.2 - (pct/100)*314.2;
+    // Hero ring always uses gradient via SVG — no stroke colour needed
+
+    // HUD mini ring on video (138.2 circumference)
+    const h = $("hud-ring-path"); if(h) {
+      h.style.strokeDashoffset = 138.2 - (pct/100)*138.2;
+      h.style.stroke = status==="good"?"var(--good)":status==="needs_work"?"var(--warn)":"var(--bad)";
+    }
+    const hudVal = $("hud-acc-val"); if(hudVal) hudVal.textContent = `${Math.round(pct)}%`;
+    const hudLbl = $("hud-status-label"); if(hudLbl) {
+      hudLbl.textContent = status==="good"?"Great!":status==="needs_work"?"Almost":"Fix form";
+      hudLbl.style.color = status==="good"?"var(--good)":status==="needs_work"?"var(--warn)":"var(--bad)";
+    }
+    $("hud-accuracy").style.display="flex";
   }
 
   function startTimer() {
@@ -218,13 +231,34 @@ const CameraSession = (() => {
   function updateFeedback(fb) {
     const { messages, accuracy_pct: pct, status } = fb;
     const p = pct||0;
+
+    // Hero number + sub-label
     $("accuracy-value").textContent = `${Math.round(p)}%`;
-    $("accuracy-value").className = `accuracy-value status-${status}`;
+    $("accuracy-value").className = `acc-hero-num status-${status}`;
+    $("accuracy-status").textContent = status==="good"?"Perfect":status==="needs_work"?"Close":"Fix form";
+    $("accuracy-status").className = `acc-hero-sub status-${status}`;
+
+    // Gradient bar (always gradient colour, width changes)
     $("accuracy-bar").style.width = `${p}%`;
-    $("accuracy-bar").style.background = status==="good"?"var(--good)":status==="needs_work"?"var(--warn)":"var(--bad)";
-    $("accuracy-status").textContent = status==="good"?"Great form! 🎉":status==="needs_work"?"Almost there!":"Needs improvement";
-    $("accuracy-status").className = `accuracy-status status-${status}`;
+
+    // Status pills — show passing/failing rule counts
+    const passing = (_lastAnalysis?.passing_rules||[]).length;
+    const failing  = (_lastAnalysis?.failing_rules||[]).length;
+    const pillCls = status==="good"?"good":status==="needs_work"?"warn":"bad";
+    $("acc-pills").innerHTML = [
+      passing ? `<span class="acc-pill good">${passing} ✓</span>` : "",
+      failing  ? `<span class="acc-pill bad">${failing} ✗</span>` : "",
+      !passing && !failing ? `<span class="acc-pill muted">Detecting…</span>` : "",
+    ].join("");
+
     updateRing(p, status);
+
+    // Also update topbar confidence badge
+    $("pose-confidence").textContent  = status==="good"?"✓ Good":status==="needs_work"?"~ Close":"✗ Fix";
+    $("pose-confidence").style.color  = status==="good"?"var(--good)":status==="needs_work"?"var(--warn)":"var(--bad)";
+    const pp = $("pose-confidence-panel");
+    if(pp) { pp.textContent=$("pose-confidence").textContent; pp.style.color=$("pose-confidence").style.color; }
+
     if (messages?.length) {
       const fails = _lastAnalysis?.failing_rules || [];
       $("feedback-list").innerHTML = messages.map((m,i) => {
@@ -269,7 +303,7 @@ const CameraSession = (() => {
     $("sym-breakdown").innerHTML=(sym.breakdown||[]).map(b=>`
       <div class="sym-row">
         <span class="sym-name">${b.joint}</span>
-        <span style="font-size:12px;font-weight:700;color:${b.ok?"var(--good)":"var(--bad)"}">${Math.round(b.score)}%</span>
+        <span class="sym-score-val" style="color:${b.ok?"var(--good)":"var(--bad)"}">${Math.round(b.score)}%</span>
         <div class="sym-dot" style="background:${b.ok?"var(--good)":"var(--bad)"}"></div>
       </div>`).join("");
   }
