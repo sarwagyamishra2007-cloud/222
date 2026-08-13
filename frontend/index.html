@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Posture Coach</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Kinetra — AI Posture Coach</title>
   <link rel="stylesheet" href="/static/style.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
@@ -11,21 +11,36 @@
 
 <!-- ── App Header ─────────────────────────────────────────────────────────── -->
 <header class="app-header hidden" id="app-header">
-  <div class="logo"><span class="logo-icon">🧘</span><span class="logo-text">AI Posture Coach</span></div>
-  <nav>
+  <div class="logo">
+    <img src="/static/kinetra-logo.svg" alt="Kinetra" class="logo-img"/>
+  </div>
+  <!-- Desktop nav -->
+  <nav class="main-nav" id="main-nav">
     <button id="btn-nav-exercises" class="active">Exercises</button>
     <button id="btn-nav-progress">Progress</button>
     <button id="btn-nav-coach">🤖 Coach</button>
     <button id="btn-theme" title="Toggle theme">🌙</button>
     <button id="btn-logout">Logout</button>
   </nav>
+  <!-- Mobile hamburger -->
+  <button class="hamburger" id="btn-hamburger" aria-label="Menu">☰</button>
 </header>
+
+<!-- Mobile nav drawer -->
+<div class="mobile-nav hidden" id="mobile-nav">
+  <button id="mob-exercises" class="mob-nav-btn active">🏋️ Exercises</button>
+  <button id="mob-progress"  class="mob-nav-btn">📊 Progress</button>
+  <button id="mob-coach"     class="mob-nav-btn">🤖 Coach</button>
+  <button id="mob-theme"     class="mob-nav-btn">🌙 Theme</button>
+  <button id="mob-logout"    class="mob-nav-btn danger">Logout</button>
+</div>
 
 <!-- ── Auth View ──────────────────────────────────────────────────────────── -->
 <div id="auth-view">
   <div class="auth-card">
-    <div class="auth-logo">🧘</div>
-    <h2>AI Posture Coach</h2>
+    <div class="auth-logo-wrap">
+      <img src="/static/kinetra-logo.svg" alt="Kinetra" class="auth-logo-img"/>
+    </div>
     <p class="auth-sub">Real-time AI-powered movement analysis</p>
     <div class="auth-tabs">
       <button id="tab-login" class="active" onclick="Auth.showTab('login')">Login</button>
@@ -52,10 +67,7 @@
     <h2>Choose an Exercise</h2>
     <div id="user-stats" class="user-stats"></div>
   </div>
-
-  <!-- Streak banner -->
   <div id="streak-banner" class="streak-banner hidden"></div>
-
   <div class="category-tabs">
     <button class="active" onclick="ExerciseSelector.filter('all',this)">All</button>
     <button onclick="ExerciseSelector.filter('yoga',this)">🧘 Yoga</button>
@@ -79,7 +91,7 @@
   </div>
 
   <div class="camera-layout">
-    <!-- LEFT: video + overlays -->
+    <!-- TOP/LEFT: video + overlays -->
     <div class="video-wrapper">
       <canvas id="display-canvas" width="640" height="480"></canvas>
       <div class="canvas-overlay" id="canvas-overlay">
@@ -127,13 +139,12 @@
       </div>
     </div>
 
-    <!-- RIGHT: analysis panel -->
+    <!-- BOTTOM/RIGHT: analysis panel -->
     <div class="feedback-panel">
 
       <!-- Big accuracy card -->
       <div class="panel-card acc-hero-card">
         <div class="acc-hero-inner">
-          <!-- Large animated ring -->
           <div class="acc-hero-ring">
             <svg viewBox="0 0 120 120">
               <defs>
@@ -152,7 +163,6 @@
               <div class="acc-hero-sub" id="accuracy-status">Waiting</div>
             </div>
           </div>
-          <!-- Right side: bar + status -->
           <div class="acc-hero-right">
             <div class="acc-hero-label">ACCURACY</div>
             <div class="acc-bar-stack">
@@ -167,7 +177,7 @@
         </div>
       </div>
 
-      <!-- Joint angles - pill style -->
+      <!-- Joint angles -->
       <div class="panel-card angles-card">
         <div class="panel-card-header">
           <h4>Joint Angles</h4>
@@ -211,15 +221,12 @@
 <!-- ── Progress View ──────────────────────────────────────────────────────── -->
 <div id="progress-view" class="view hidden">
   <h2>My Progress</h2>
-
   <div class="stats-row" id="stats-row">
     <div class="stat-card"><div class="stat-value" id="stat-total-sessions">—</div><div class="stat-label">Sessions</div></div>
     <div class="stat-card"><div class="stat-value" id="stat-best-accuracy">—</div><div class="stat-label">Best Accuracy</div></div>
     <div class="stat-card streak-stat"><div class="stat-value" id="stat-streak">—</div><div class="stat-label">🔥 Streak</div></div>
     <div class="stat-card"><div class="stat-value" id="stat-top-exercise">—</div><div class="stat-label">Top Exercise</div></div>
   </div>
-
-  <!-- Activity heatmap -->
   <div class="panel-card" style="margin-bottom:16px">
     <div class="panel-card-header" style="margin-bottom:12px">
       <h4>Activity — Last 90 Days</h4>
@@ -227,8 +234,6 @@
     </div>
     <div id="heatmap-grid" class="heatmap-grid"></div>
   </div>
-
-  <!-- Trend line chart -->
   <div class="progress-chart-wrap" style="margin-bottom:16px">
     <div class="panel-card-header" style="margin-bottom:8px;padding:0">
       <h4 style="text-transform:none;font-size:13px;color:var(--text);font-weight:700">Accuracy Trend</h4>
@@ -238,19 +243,13 @@
     </div>
     <canvas id="trend-chart"></canvas>
   </div>
-
-  <!-- Bar chart -->
   <div class="progress-chart-wrap">
     <canvas id="progress-chart"></canvas>
   </div>
-
-  <!-- Personal bests -->
   <div class="panel-card" style="margin-bottom:16px">
     <h4 style="margin-bottom:14px;text-transform:none;font-size:14px;font-weight:700;color:var(--text)">🏆 Personal Bests</h4>
     <div id="personal-bests-grid" class="pb-grid"></div>
   </div>
-
-  <!-- Session history -->
   <div class="panel-card">
     <div class="panel-card-header" style="margin-bottom:12px">
       <h4>Session History</h4>
@@ -268,22 +267,16 @@
 <!-- ── AI Coach View ──────────────────────────────────────────────────────── -->
 <div id="coach-view" class="view hidden">
   <h2>🤖 AI Coach</h2>
-
   <div class="coach-layout">
-    <!-- Tip card -->
     <div class="panel-card coach-tip-card" id="coach-tip-card">
       <div class="coach-tip-emoji" id="coach-emoji">💡</div>
       <div class="coach-tip-text" id="coach-tip-text">Loading your personalised tip…</div>
       <div class="coach-focus" id="coach-focus"></div>
     </div>
-
-    <!-- Muscle focus guide -->
     <div class="panel-card">
       <h4 style="margin-bottom:14px;text-transform:none;font-size:14px;font-weight:700;color:var(--text)">🏋️ What to Focus On</h4>
       <div id="muscle-guide" class="muscle-guide"></div>
     </div>
-
-    <!-- Improvement suggestions -->
     <div class="panel-card">
       <h4 style="margin-bottom:14px;text-transform:none;font-size:14px;font-weight:700;color:var(--text)">📈 Your Improvement Plan</h4>
       <div id="improvement-plan" class="improvement-plan">
@@ -293,7 +286,7 @@
   </div>
 </div>
 
-<!-- Confetti script (tiny vanilla) -->
+<!-- Confetti script -->
 <script>
 function launchConfetti() {
   const area = document.getElementById("confetti-canvas");

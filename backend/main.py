@@ -407,6 +407,9 @@ async def ws_analyze(websocket: WebSocket, exercise_id: str, token: str):
                 break
 
             now = time.time() * 1000
+            # Skip empty keepalive pings from client
+            if len(frame_bytes) == 0:
+                continue
             if now - last_processed < _THROTTLE_MS:
                 continue
             last_processed = now

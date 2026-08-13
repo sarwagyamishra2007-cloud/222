@@ -90,6 +90,7 @@ const Auth = (() => {
 })();
 
 // ── Navigation ─────────────────────────────────────────────────────────────────
+function closeMobileNav() { $("mobile-nav").classList.add("hidden"); }
 function onLoggedIn() {
   showHeader(true);
   setNavActive("exercises");
@@ -102,6 +103,14 @@ $("btn-nav-progress").addEventListener("click",  () => { setNavActive("progress"
 $("btn-nav-coach").addEventListener("click",     () => { setNavActive("coach");     CoachView.load(); showView("coach-view"); });
 $("btn-logout").addEventListener("click", Auth.logout);
 $("btn-theme").addEventListener("click",  Theme.toggle);
+
+// ── Mobile hamburger + drawer ───────────────────────────────────────────────────
+$("btn-hamburger").addEventListener("click", () => $("mobile-nav").classList.toggle("hidden"));
+$("mob-exercises").addEventListener("click", () => { setNavActive("exercises"); showView("exercise-view"); closeMobileNav(); });
+$("mob-progress").addEventListener("click",  () => { setNavActive("progress");  ProgressView.load(); showView("progress-view"); closeMobileNav(); });
+$("mob-coach").addEventListener("click",     () => { setNavActive("coach");     CoachView.load(); showView("coach-view"); closeMobileNav(); });
+$("mob-theme").addEventListener("click",     () => { Theme.toggle(); closeMobileNav(); });
+$("mob-logout").addEventListener("click",    () => { Auth.logout(); closeMobileNav(); });
 
 // ── Streak banner on exercise screen ──────────────────────────────────────────
 async function loadStreakBanner() {
@@ -154,11 +163,12 @@ const _SKEL = [
 const _COLOR = { green:"#00dd44", red:"#ff3333", yellow:"#ffcc00" };
 
 const CameraSession = (() => {
-  let _ws,_stream,_capIntvl,_displayRaf,_timerIntvl,_exercise,_reps=0,_accSum=0,_accCnt=0,_best=0,_t0=null,_rules=[];
+  let _ws,_stream,_capIntvl,_pingIntvl,_displayRaf,_timerIntvl,_exercise,_reps=0,_accSum=0,_accCnt=0,_best=0,_t0=null,_rules=[];
   let _lastAnalysis = null;
   let _accBuffer = [];
-  let _lastLandmarks = null;  // latest landmarks from server
-  let _lastJointColors = {};  // latest joint colors from server
+  let _lastLandmarks = null;
+  let _lastJointColors = {};
+  let _stopping = false;
 
   const _cap = document.createElement("canvas"); _cap.width=640; _cap.height=480;
   const _capCtx = _cap.getContext("2d");
@@ -187,7 +197,8 @@ const CameraSession = (() => {
   // ── Draw loop: always 60fps local video + skeleton overlay ─────────────────
   function drawLoop() {
     if (_video.readyState >= 2) {
-      const w = _dc.width || 640, h = _dc.height || 480;
+      // Always use the canvas's pixel buffer size (not CSS size)
+      const w = _dc.width, h = _dc.height;
       _dCtx.drawImage(_video, 0, 0, w, h);
       if (_lastLandmarks) drawSkeleton(w, h);
     }
@@ -251,17 +262,26 @@ const CameraSession = (() => {
 
     startTimer();
     const token = Auth.getToken();
+    _stopping = false;
     _ws = new WebSocket(`${WS_BASE}/ws/analyze?exercise_id=${exerciseId}&token=${encodeURIComponent(token)}`);
     _ws.binaryType = "arraybuffer";
     _ws.onopen = () => {
       $("canvas-overlay").classList.add("hidden");
-      // Send frames to server for analysis at ~12fps (80ms)
+      // Send frames for analysis at ~12fps
       _capIntvl = setInterval(sendFrame, 80);
-      // Draw local video + skeleton at 60fps via rAF
+      // Keepalive ping every 20s — prevents Render/nginx from killing idle WS
+      _pingIntvl = setInterval(() => {
+        if (_ws?.readyState === WebSocket.OPEN) _ws.send(new ArrayBuffer(0));
+      }, 20000);
+      // Draw local video + skeleton at 60fps
       drawLoop();
     };
     _ws.onmessage = e => { try { handleMsg(JSON.parse(e.data)); } catch(_) {} };
-    _ws.onclose = () => { clearInterval(_capIntvl); cancelAnimationFrame(_displayRaf); stopTimer(); showSummary(); };
+    _ws.onclose = () => {
+      clearInterval(_capIntvl); clearInterval(_pingIntvl);
+      cancelAnimationFrame(_displayRaf); stopTimer();
+      if (!_stopping) showSummary();  // only auto-summary on unexpected close
+    };
     _ws.onerror = e => console.error("WS error", e);
   }
 
@@ -372,9 +392,12 @@ const CameraSession = (() => {
   }
 
   function stop() {
+    _stopping = true;
     if (_ws?.readyState===WebSocket.OPEN) _ws.close();
-    clearInterval(_capIntvl); cancelAnimationFrame(_displayRaf); stopTimer();
+    clearInterval(_capIntvl); clearInterval(_pingIntvl);
+    cancelAnimationFrame(_displayRaf); stopTimer();
     if (_stream) { _stream.getTracks().forEach(t=>t.stop()); _stream=null; }
+    showSummary();
   }
 
   // ── UNIQUE: Personal best detection with confetti ─────────────────────────
