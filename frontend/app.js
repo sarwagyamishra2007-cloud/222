@@ -142,9 +142,10 @@ const ExerciseSelector = (() => {
 
 // ── Camera Session ─────────────────────────────────────────────────────────────
 const CameraSession = (() => {
-  let _ws,_stream,_capIntvl,_timerIntvl,_exercise,_reps=0,_accSum=0,_accCnt=0,_best=0,_t0=null,_rules=[];
+  let _ws,_stream,_capIntvl,_localIntvl,_timerIntvl,_exercise,_reps=0,_accSum=0,_accCnt=0,_best=0,_t0=null,_rules=[];
   let _lastAnalysis = null;
   let _accBuffer = [];
+  let _lastServerFrame = false;
 
   const _cap = document.createElement("canvas"); _cap.width=640; _cap.height=480;
   const _capCtx = _cap.getContext("2d");
@@ -181,7 +182,7 @@ const CameraSession = (() => {
   function elapsed() { if(!_t0) return "0s"; const e=Math.floor((Date.now()-_t0)/1000); return e<60?`${e}s`:`${Math.floor(e/60)}m ${e%60}s`; }
 
   async function start(exerciseId, exercise) {
-    _exercise=exercise; _reps=0; _accSum=0; _accCnt=0; _best=0; _rules=exercise.rules||[]; _accBuffer=[];
+    _exercise=exercise; _reps=0; _accSum=0; _accCnt=0; _best=0; _rules=exercise.rules||[]; _accBuffer=[]; _lastServerFrame=false;
     $("camera-title").textContent=exercise.name; $("session-timer").textContent="00:00";
     $("session-summary").classList.add("hidden"); $("btn-stop").disabled=false;
     $("canvas-overlay").classList.remove("hidden");
@@ -201,23 +202,46 @@ const CameraSession = (() => {
     const token = Auth.getToken();
     _ws = new WebSocket(`${WS_BASE}/ws/analyze?exercise_id=${exerciseId}&token=${encodeURIComponent(token)}`);
     _ws.binaryType = "arraybuffer";
-    _ws.onopen = () => { $("canvas-overlay").classList.add("hidden"); _capIntvl = setInterval(sendFrame, 100); };
+    _ws.onopen = () => {
+      $("canvas-overlay").classList.add("hidden");
+      // Send frames to server at 30fps
+      _capIntvl = setInterval(sendFrame, 33);
+      // Draw local video to canvas at 30fps so it's always smooth
+      _localIntvl = setInterval(drawLocal, 33);
+    };
     _ws.onmessage = e => { try { handleMsg(JSON.parse(e.data)); } catch(_) {} };
-    _ws.onclose = () => { clearInterval(_capIntvl); stopTimer(); showSummary(); };
+    _ws.onclose = () => { clearInterval(_capIntvl); clearInterval(_localIntvl); stopTimer(); showSummary(); };
     _ws.onerror = e => console.error("WS error", e);
+  }
+
+  // Draw local video frame directly — keeps display smooth even when server is slow
+  function drawLocal() {
+    if (_lastServerFrame) return; // once server starts sending, stop overwriting
+    if (_video.readyState >= 2) {
+      _dc.width = _dc.width || 640;
+      _dCtx.drawImage(_video, 0, 0, _dc.width, _dc.height || 480);
+    }
   }
 
   function sendFrame() {
     if (!_ws || _ws.readyState !== WebSocket.OPEN) return;
-    _capCtx.drawImage(_video,0,0,640,480);
-    _cap.toBlob(b => { if(b && _ws?.readyState===WebSocket.OPEN) b.arrayBuffer().then(buf=>_ws.send(buf)); }, "image/jpeg", 0.8);
+    _capCtx.drawImage(_video, 0, 0, 640, 480);
+    _cap.toBlob(b => {
+      if (b && _ws?.readyState === WebSocket.OPEN)
+        b.arrayBuffer().then(buf => _ws.send(buf));
+    }, "image/jpeg", 0.75);
   }
 
   function handleMsg(data) {
     if (data.frame) {
-      const img=new Image();
-      img.onload=()=>{ _dc.width=img.width||640; _dc.height=img.height||480; _dCtx.drawImage(img,0,0); };
-      img.src="data:image/jpeg;base64,"+data.frame;
+      _lastServerFrame = true;
+      const img = new Image();
+      img.onload = () => {
+        _dc.width  = img.width  || 640;
+        _dc.height = img.height || 480;
+        _dCtx.drawImage(img, 0, 0);
+      };
+      img.src = "data:image/jpeg;base64," + data.frame;
     }
     if (data.feedback) updateFeedback(data.feedback);
     if (data.analysis) { updateAngles(data.analysis); _lastAnalysis=data.analysis; }
@@ -310,7 +334,7 @@ const CameraSession = (() => {
 
   function stop() {
     if (_ws?.readyState===WebSocket.OPEN) _ws.close();
-    clearInterval(_capIntvl); stopTimer();
+    clearInterval(_capIntvl); clearInterval(_localIntvl); stopTimer();
     if (_stream) { _stream.getTracks().forEach(t=>t.stop()); _stream=null; }
   }
 

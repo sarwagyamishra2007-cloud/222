@@ -396,7 +396,7 @@ async def ws_analyze(websocket: WebSocket, exercise_id: str, token: str):
         ex_session = create_session(db, user.id, exercise)
         rep_number = 0
         last_processed = 0.0
-        _THROTTLE_MS = 100
+        _THROTTLE_MS = 33  # ~30fps
 
         # Smoothing buffer for accuracy (rolling avg over last 5 frames)
         accuracy_buffer: list[float] = []
